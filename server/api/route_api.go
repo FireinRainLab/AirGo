@@ -104,6 +104,7 @@ func NewDynamicRoute(ctx *gin.Context) {
 		response.Fail("新建动态路由参数错误"+err.Error(), nil, ctx)
 		return
 	}
+	route.ID = 0
 	// 查询动态路由是否存在
 	notExist := service.NotExistDynamicRoute(&route)
 	if !notExist {

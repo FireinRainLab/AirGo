@@ -4,12 +4,12 @@ import (
 	"AirGo/global"
 	"AirGo/model"
 	"AirGo/service"
-	"AirGo/utils/encode_plugin"
+	"AirGo/utils/encrypt_plugin"
 	"AirGo/utils/jwt_plugin"
 	timeTool "AirGo/utils/time_plugin"
 	"net/http"
 
-	//"AirGo/utils/encode_plugin"
+	//"AirGo/utils/encrypt_plugin"
 
 	"AirGo/utils/response"
 
@@ -267,7 +267,7 @@ func ChangeUserPassword(ctx *gin.Context) {
 	//
 	var user = model.User{
 		ID:       uIDInt,
-		Password: encode_plugin.BcryptEncode(u.Password),
+		Password: encrypt_plugin.BcryptEncode(u.Password),
 	}
 	//
 	err = service.UpdateUser(&user)
@@ -297,7 +297,7 @@ func ResetUserPassword(ctx *gin.Context) {
 	}
 	var user = model.User{
 		UserName: u.UserName,
-		Password: encode_plugin.BcryptEncode(u.Password),
+		Password: encrypt_plugin.BcryptEncode(u.Password),
 	}
 	//
 	err = service.ResetUserPassword(&user)
@@ -331,7 +331,7 @@ func ResetSub(ctx *gin.Context) {
 	var u = model.User{
 		ID:            uIDInt,
 		UUID:          uuid.NewV4(),
-		SubscribeInfo: model.SubscribeInfo{SubscribeUrl: encode_plugin.RandomString(8)}, //随机字符串订阅url
+		SubscribeInfo: model.SubscribeInfo{SubscribeUrl: encrypt_plugin.RandomString(8)}, //随机字符串订阅url
 	}
 	err := service.UpdateUser(&u)
 	if err != nil {

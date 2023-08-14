@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"AirGo/model"
-	encode_plugin "AirGo/utils/encode_plugin"
+	encrypt_plugin "AirGo/utils/encrypt_plugin"
 	"errors"
 	uuid "github.com/satori/go.uuid"
 )
@@ -25,9 +25,9 @@ func Register(u *model.User) error {
 			UUID:           uuid.NewV4(),
 			UserName:       u.UserName,
 			NickName:       u.UserName,
-			Password:       encode_plugin.BcryptEncode(u.Password),
+			Password:       encrypt_plugin.BcryptEncode(u.Password),
 			RoleGroup:      []model.Role{{ID: 2}}, //默认角色
-			InvitationCode: encode_plugin.RandomString(8),
+			InvitationCode: encrypt_plugin.RandomString(8),
 			ReferrerCode:   u.ReferrerCode,
 		}
 		return CreateUser(NewUserSubscribe(&newUser))
@@ -63,7 +63,7 @@ func Login(u *model.UserLogin) (*model.User, error) {
 	} else if !user.Enable {
 		return nil, errors.New("用户已冻结")
 	} else {
-		if err := encode_plugin.BcryptDecode(u.Password, user.Password); err != nil {
+		if err := encrypt_plugin.BcryptDecode(u.Password, user.Password); err != nil {
 			return nil, errors.New("密码错误")
 		}
 		return &user, err
@@ -121,7 +121,7 @@ func HandleUserSubscribe(u *model.User, goods *model.Goods) *model.User {
 	u.SubscribeInfo.U = 0                                         //用户已用流量清零 //如果用struct ,gorm 不会更新“零值”
 	u.SubscribeInfo.D = 0                                         //用户已用流量清零 //如果用struct ,gorm 不会更新“零值”
 	if u.SubscribeInfo.SubscribeUrl == "" {
-		u.SubscribeInfo.SubscribeUrl = encode_plugin.RandomString(8) //随机字符串订阅url
+		u.SubscribeInfo.SubscribeUrl = encrypt_plugin.RandomString(8) //随机字符串订阅url
 	}
 
 	u.SubscribeInfo.GoodsID = goods.ID //当前订购的套餐

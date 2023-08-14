@@ -3,7 +3,7 @@ package api
 import (
 	"AirGo/global"
 	"AirGo/model"
-	"AirGo/utils/encode_plugin"
+	"AirGo/utils/encrypt_plugin"
 	"AirGo/utils/mail_plugin"
 	"AirGo/utils/response"
 	"github.com/gin-gonic/gin"
@@ -32,7 +32,7 @@ func GetMailCode(ctx *gin.Context) {
 	//	return
 	//}
 	//生成验证码
-	randomStr := encode_plugin.RandomString(4) //4位随机数
+	randomStr := encrypt_plugin.RandomString(4) //4位随机数
 	var wg sync.WaitGroup
 	wg.Add(3)
 	//验证码存入local cache

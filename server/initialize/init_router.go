@@ -214,6 +214,19 @@ func InitRouter() {
 		couponRouter.POST("updateCoupon", api.UpdateCoupon)
 		couponRouter.POST("getCoupon", api.GetCoupon)
 	}
+	//isp
+	ispRouter := RouterGroup.Group("isp").Use(middleware.RateLimitIP(), middleware.ParseJwt(), middleware.Casbin(), middleware.RateLimitVisit())
+	{
+		ispRouter.POST("sendCode", api.SendCode)
+		ispRouter.POST("ispLogin", api.ISPLogin)
+		//ispRouter.POST("queryPackage", api.QueryPackage) //
+		ispRouter.POST("getMonitorByUserID", api.GetMonitorByUserID)
+
+	}
+	ispRouterNoVerify := RouterGroup.Group("isp").Use(middleware.RateLimitIP())
+	{
+		ispRouterNoVerify.GET("queryPackage", api.QueryPackage) //
+	}
 	//Router.Run(":" + strconv.Itoa(global.CONFIG.System.Port))
 
 	srv := &http.Server{

@@ -19,6 +19,7 @@ import (
 func InitLogrus() *logrus.Logger {
 	//实例化
 	logger := logrus.New()
+	logger.SetReportCaller(true) //在输出日志中添加文件名和方法信息
 	src, _ := SetOutputFile()
 	//设置输出
 	logger.Out = src

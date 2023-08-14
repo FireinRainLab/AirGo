@@ -3,7 +3,7 @@ package initialize
 import (
 	"AirGo/global"
 	"AirGo/model"
-	utils "AirGo/utils/encode_plugin"
+	utils "AirGo/utils/encrypt_plugin"
 	"errors"
 	"gorm.io/driver/sqlite"
 	//"go-admin/initialize"
@@ -98,6 +98,8 @@ func RegisterTables() {
 		model.Article{},
 		//折扣
 		model.Coupon{},
+		//isp
+		model.ISP{},
 	)
 	if err != nil {
 		//os.Exit(0)
@@ -150,6 +152,7 @@ func InsertInto(db *gorm.DB) error {
 		{ParentID: 0, Path: "/serverStatus", Name: "serverStatus", Component: "/serverStatus/index.vue", Meta: model.Meta{Title: "节点状态", Icon: "iconfont icon-putong"}}, //15
 		{ParentID: 0, Path: "/gallery", Name: "gallery", Component: "/gallery/index.vue", Meta: model.Meta{Title: "无限图库", Icon: "iconfont icon-step"}},                  //16
 		{ParentID: 0, Path: "/income", Name: "income", Component: "/income/index.vue", Meta: model.Meta{Title: "营收概览", Icon: "iconfont icon-xingqiu"}},                  //17
+		{ParentID: 0, Path: "/isp", Name: "isp", Component: "/isp/index.vue", Meta: model.Meta{Title: "套餐监控", Icon: "iconfont icon-xingqiu"}},                           //18
 	}
 	if err := db.Create(&DynamicRouteData).Error; err != nil {
 		return errors.New("sys_dynamic-router_data表数据初始化失败!")
@@ -189,6 +192,8 @@ func InsertInto(db *gorm.DB) error {
 		{RoleID: 1, DynamicRouteID: 14},
 		{RoleID: 1, DynamicRouteID: 15},
 		{RoleID: 1, DynamicRouteID: 16},
+		{RoleID: 1, DynamicRouteID: 17},
+		{RoleID: 1, DynamicRouteID: 18},
 
 		{RoleID: 2, DynamicRouteID: 9},
 		{RoleID: 2, DynamicRouteID: 10},
@@ -196,6 +201,8 @@ func InsertInto(db *gorm.DB) error {
 		{RoleID: 2, DynamicRouteID: 12},
 		{RoleID: 2, DynamicRouteID: 13},
 		{RoleID: 2, DynamicRouteID: 14},
+		{RoleID: 2, DynamicRouteID: 15},
+		{RoleID: 2, DynamicRouteID: 18},
 	}
 	if err := global.DB.Create(&roleAndMenuData).Error; err != nil {
 		return errors.New("role_and_menu表数据初始化失败!")
@@ -316,6 +323,11 @@ func InsertInto(db *gorm.DB) error {
 		{Ptype: "p", V0: "1", V1: "/coupon/updateCoupon", V2: "POST"},
 		{Ptype: "p", V0: "1", V1: "/coupon/getCoupon", V2: "POST"},
 
+		{Ptype: "p", V0: "1", V1: "/isp/sendCode", V2: "POST"},
+		{Ptype: "p", V0: "1", V1: "/isp/ispLogin", V2: "POST"},
+		{Ptype: "p", V0: "1", V1: "/isp/getMonitorByUserID", V2: "POST"},
+		//{Ptype: "p", V0: "1", V1: "/isp/queryPackage", V2: "POST"},
+
 		//普通用户
 		{Ptype: "p", V0: "2", V1: "/user/login", V2: "POST"},
 		{Ptype: "p", V0: "2", V1: "/user/getSub", V2: "GET"},
@@ -341,6 +353,10 @@ func InsertInto(db *gorm.DB) error {
 		{Ptype: "p", V0: "2", V1: "/upload/getPictureList", V2: "POST"},
 
 		{Ptype: "p", V0: "2", V1: "/article/getArticle", V2: "POST"},
+
+		{Ptype: "p", V0: "2", V1: "/isp/sendCode", V2: "POST"},
+		{Ptype: "p", V0: "2", V1: "/isp/ispLogin", V2: "POST"},
+		{Ptype: "p", V0: "2", V1: "/isp/getMonitorByUserID", V2: "POST"},
 	}
 	if err := global.DB.Create(&casbinRuleData).Error; err != nil {
 		return errors.New("casbin_rule表数据初始化失败!")
