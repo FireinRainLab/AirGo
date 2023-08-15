@@ -6,7 +6,7 @@ import qs from 'qs';
 // 配置新建一个 axios 实例
 const service: AxiosInstance = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
-    timeout: 50000,
+    timeout: 30000,
     headers: {'Content-Type': 'application/json'},
     // headers: {"Content-Type": "application/x-www-form-urlencoded"},
     paramsSerializer: {
@@ -48,11 +48,12 @@ service.interceptors.response.use(
         console.log("响应数据：", res);
         if (res.code && res.code !== 0) {
             // `token` 过期或者账号已在别处登录
-            if (res.code === 401 || res.code === 4001) {
+            // if (res.code === 401 || res.code === 4001) {
+            if (res.msg==='Token is expired') {
                 // Session.clear(); // 清除浏览器全部临时缓存
                 Local.clear()
                 window.location.href = '/'; // 去登录页
-                ElMessageBox.alert('你已被登出，请重新登录', '提示', {})
+                ElMessageBox.alert('请重新登录', '提示', {})
                     .then(() => {
                     })
                     .catch(() => {

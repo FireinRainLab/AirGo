@@ -223,8 +223,9 @@ func UnicomQueryTrafficHandler(resp, mobile string) (string, error) {
 		"sum":         sum,
 		"freeFlow":    freeFlow,
 		"mlResources": mlResourcesStr,
-		"unshared":    unsharedList,
-		"shared":      sharedList,
+		"flow":        unsharedList + sharedList,
+		//"unshared":    unsharedList,
+		//"shared":      sharedList,
 	}
 	resultJson, err := json.Marshal(result)
 	//fmt.Println(string(resultJson))
