@@ -7,12 +7,25 @@ declare interface Isp {
     isp_type: string;
     status: boolean;
     unicom_config: UnicomConfig;
+    telecom_config:TelecomConfig;
 }
 
 declare interface UnicomConfig {
     version: string;
     app_id: string;
     cookie: string;
-    mobile: string;
+    unicomMobile: string;
     password: string;
+}
+
+declare interface TelecomConfig {
+    phoneNum: string;
+    telecomPassword: string;
+
+    timestamp: string;
+    loginAuthCipherAsymmertric: string;
+
+    deviceUid: string;
+    telecomToken: string;
+
 }

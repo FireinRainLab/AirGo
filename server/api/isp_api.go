@@ -9,6 +9,7 @@ import (
 	"AirGo/utils/jwt_plugin"
 	"AirGo/utils/response"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -29,6 +30,9 @@ func GetMonitorByUserID(ctx *gin.Context) {
 			UnicomConfig: model.UnicomConfig{
 				APPID: encrypt_plugin.RandomString(160),
 			},
+			TelecomConfig: model.TelecomConfig{
+				DeviceUid: encrypt_plugin.RandomString2(16),
+			},
 		}
 		service.NewMonitor(&ispNew)
 		isp, _ = service.GetMonitorByUserID(uIDInt)
@@ -48,13 +52,15 @@ func SendCode(ctx *gin.Context) {
 	}
 	//处理mobile
 	mb, _ := encrypt_plugin.RSAEnCrypt(isp.Mobile, isp_plugin.UnicomPublicKey)
-	isp.UnicomConfig.Mobile = mb
+	isp.UnicomConfig.UnicomMobile = mb
 	//
 	var resp string
 	switch isp.ISPType {
 	case "unicom":
 		resp, err = isp_plugin.UnicomCode(&isp)
 	case "telecom":
+		fmt.Println("telecom")
+		resp, err = isp_plugin.TelecomCode(&isp)
 	}
 	if err != nil {
 		global.Logrus.Error("发送验证码错误:", err)
@@ -69,15 +75,29 @@ func SendCode(ctx *gin.Context) {
 		response.Fail("resp解析错误", nil, ctx)
 		return
 	}
-	if respMap["rsp_code"] != "0000" {
-		msg := respMap["rsp_desc"].(string)
-		if msg == "" {
-			msg = "发送验证码失败"
+	switch isp.ISPType {
+	case "unicom":
+		if respMap["rsp_code"].(string) != "0000" {
+			msg := respMap["rsp_desc"].(string)
+			if msg == "" {
+				msg = "发送验证码失败"
+			}
+			response.Fail(msg, nil, ctx)
+			return
 		}
-		response.Fail(msg, nil, ctx)
-		return
+
+	case "telecom":
+		if respMap["responseData"].(map[string]interface{})["resultCode"].(string) != "0000" {
+			msg := respMap["responseData"].(map[string]interface{})["resultDesc"].(string)
+			if msg == "" {
+				msg = "发送验证码失败"
+			}
+			response.Fail(msg, nil, ctx)
+			return
+		}
+
 	}
-	response.OK(respMap["rsp_desc"].(string), resp, ctx)
+	response.OK("验证码发送成功", string(json.RawMessage(resp)), ctx)
 
 }
 
@@ -97,69 +117,81 @@ func ISPLogin(ctx *gin.Context) {
 		response.Fail("运营商参数错误", nil, ctx)
 		return
 	}
+	fmt.Println("登录：", isp)
 	if isp.ISPType == "loginAgain" {
 		//清空手机号信息，重新登录
 		//fmt.Println("清空手机号信息，重新登录")
 		isp1, _ := service.GetMonitorByUserID(uIDInt)
 		isp1.UnicomConfig.Cookie = ""
 		isp1.UnicomConfig.Password = ""
-		isp1.UnicomConfig.Mobile = ""
+		isp1.UnicomConfig.UnicomMobile = ""
 		isp1.Status = false
+		isp1.TelecomConfig.TelecomPassword = ""
+		isp1.TelecomConfig.PhoneNum = ""
+		isp1.TelecomConfig.TelecomToken = ""
 		go service.UpdateMonitor(isp1)
 		response.OK("获取成功", isp, ctx)
 		return
 	}
 
-	//fmt.Println("登录运营商", isp)
-	//处理mobile,appid,验证码
-	mb, _ := encrypt_plugin.RSAEnCrypt(isp.Mobile, isp_plugin.UnicomPublicKey)
-	//appid, _ := encrypt_plugin.RSAEnCrypt(encrypt_plugin.RandomString(160), isp_plugin.UnicomPublicKey)
-	pw, _ := encrypt_plugin.RSAEnCrypt(isp.UnicomConfig.Password, isp_plugin.UnicomPublicKey)
-	isp.UnicomConfig.Mobile = mb
-	//isp.UnicomConfig.APPID = appid
-	isp.UnicomConfig.Password = pw
-	//尝试登录
 	var resp, cookie string
 	switch isp.ISPType {
 	case "unicom":
-		resp, cookie, err = isp_plugin.UnicomCodeLogin(isp.UnicomConfig.Password, isp.UnicomConfig.Mobile, isp.UnicomConfig.APPID)
+		mb, _ := encrypt_plugin.RSAEnCrypt(isp.Mobile, isp_plugin.UnicomPublicKey)
+		pw, _ := encrypt_plugin.RSAEnCrypt(isp.UnicomConfig.Password, isp_plugin.UnicomPublicKey)
+		isp.UnicomConfig.UnicomMobile = mb
+		isp.UnicomConfig.Password = pw
+		resp, cookie, err = isp_plugin.UnicomCodeLogin(isp.UnicomConfig.Password, isp.UnicomConfig.UnicomMobile, isp.UnicomConfig.APPID)
+		if err != nil {
+			global.Logrus.Error("尝试登录错误:", err)
+			response.Fail("尝试登录错误", nil, ctx)
+			return
+		}
+		if resp == "" || cookie == "" {
+			global.Logrus.Error("尝试登录错误,resp,cookie为空")
+			response.Fail("尝试登录错误", nil, ctx)
+			return
+		}
+		//判断响应
+		respMap := make(map[string]interface{})
+		err = json.Unmarshal([]byte(resp), &respMap)
+
+		if err != nil {
+			global.Logrus.Error("resp解析错误:", err)
+			response.Fail("resp解析错误", nil, ctx)
+			return
+		}
+		if respMap["code"] != "0" {
+			response.Fail(respMap["dsc"].(string), nil, ctx)
+			return
+		}
+		//处理cookie，保存isp信息
+		isp.UserID = uIDInt
+		isp.UnicomConfig.Cookie = cookie
+		isp.Status = true
+		go service.UpdateMonitor(&isp)
+
+		//response.OK("登录成功", resp, ctx)
+		response.OK("登录成功", string(json.RawMessage(resp)), ctx)
 	case "telecom":
-	}
-	if err != nil {
-		global.Logrus.Error("尝试登录错误:", err)
-		response.Fail("尝试登录错误", nil, ctx)
-		return
-	}
-	//fmt.Println("登录resp", resp)
-	//fmt.Println("登录cookie", cookie)
-
-	if resp == "" || cookie == "" {
-		global.Logrus.Error("尝试登录错误,resp,cookie为空")
-		response.Fail("尝试登录错误", nil, ctx)
-		return
-	}
-	//判断响应
-	respMap := make(map[string]interface{})
-	err = json.Unmarshal([]byte(resp), &respMap)
-
-	if err != nil {
-		global.Logrus.Error("resp解析错误:", err)
-		response.Fail("resp解析错误", nil, ctx)
-		return
-	}
-	if respMap["code"] != "0" {
-		response.Fail(respMap["dsc"].(string), nil, ctx)
-		return
+		resp, err = isp_plugin.TelecomLogin(&isp)
+		//判断响应
+		respMap := make(map[string]interface{})
+		err = json.Unmarshal([]byte(resp), &respMap)
+		if respMap["responseData"].(map[string]interface{})["resultCode"].(string) != "0000" {
+			response.Fail(respMap["responseData"].(map[string]interface{})["resultDesc"].(string), nil, ctx)
+			return
+		}
+		//提取cookie
+		cookie = respMap["responseData"].(map[string]interface{})["data"].(map[string]interface{})["loginSuccessResult"].(map[string]interface{})["token"].(string)
+		//处理cookie，保存isp信息
+		isp.UserID = uIDInt
+		isp.TelecomConfig.TelecomToken = cookie
+		isp.Status = true
+		go service.UpdateMonitor(&isp)
+		response.OK("登录成功", string(json.RawMessage(resp)), ctx)
 	}
 
-	//处理cookie，保存isp信息
-	isp.UserID = uIDInt
-	isp.UnicomConfig.Cookie = cookie
-	isp.Status = true
-	go service.UpdateMonitor(&isp)
-
-	//response.OK("登录成功", resp, ctx)
-	response.OK("登录成功", string(json.RawMessage(resp)), ctx)
 }
 
 // 套餐查询
@@ -182,7 +214,15 @@ func QueryPackage(ctx *gin.Context) {
 		return
 	}
 	//查询套餐
-	resp, err := isp_plugin.UnicomQueryTraffic(isp)
+	var resp string
+	switch isp.ISPType {
+	case "unicom":
+		resp, err = isp_plugin.UnicomQueryTraffic(isp)
+	case "telecom":
+		fmt.Println("telecom")
+		resp, err = isp_plugin.TelecomQueryPackage(isp)
+	}
+
 	if err != nil {
 		//修改monitor状态
 		isp.Status = false

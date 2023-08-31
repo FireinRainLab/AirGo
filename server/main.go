@@ -32,6 +32,12 @@ func main() {
 	initialize.InitWebsocket()    //websocket
 	initialize.InitRatelimit()    //限流
 	initialize.InitRouter()       //初始总路由
+
 	//isp_plugin.UnicomQueryTrafficHandler("1")
+
+	//var isp model.ISP
+	//isp.Mobile = "15588131977"
+	//isp.TelecomConfig.PhoneNum = "377::353;99"
+	//isp_plugin.TelecomCode(&isp)
 
 }

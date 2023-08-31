@@ -9,12 +9,21 @@ export const useISPStore = defineStore("ispStore", {
             user_id: 0,
             isp_type: '',
             status: false,
+            mobile: '',
             unicom_config: {
                 version: '',
                 app_id: '',
                 cookie: '',
-                mobile: '',
+                unicomMobile: '',
                 password: '',
+            },
+            telecom_config:{
+                phoneNum: '',
+                telecomPassword: '',
+                timestamp: '',
+                loginAuthCipherAsymmertric: '',
+                deviceUid: '',
+                telecomToken: '',
             },
 
         } as Isp,

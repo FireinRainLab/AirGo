@@ -31,7 +31,7 @@ func UnicomCode(isp *model.ISP) (string, error) {
 
 	formValues := url.Values{}
 	formValues.Set("version", Version)
-	formValues.Set("mobile", isp.UnicomConfig.Mobile)
+	formValues.Set("mobile", isp.UnicomConfig.UnicomMobile)
 	formDataStr := formValues.Encode()
 	formDataBytes := []byte(formDataStr)
 	formBytesReader := bytes.NewReader(formDataBytes)

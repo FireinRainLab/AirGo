@@ -1,6 +1,7 @@
 package net_plugin
 
 import (
+	"compress/gzip"
 	"crypto/tls"
 	"fmt"
 	"golang.org/x/net/context"
@@ -8,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -124,6 +126,27 @@ func Dialer(dns string, timeOut time.Duration) *net.Dialer {
 
 // 读取http响应的内容
 func ReadDate(resp *http.Response) string {
-	body, _ := io.ReadAll(resp.Body)
-	return string(body)
+
+	// 是否有 gzip
+	gzipFlag := false
+	for k, v := range resp.Header {
+		if strings.ToLower(k) == "content-encoding" && strings.ToLower(v[0]) == "gzip" {
+			gzipFlag = true
+		}
+	}
+
+	var content []byte
+	if gzipFlag {
+		// 创建 gzip.Reader
+		gr, err := gzip.NewReader(resp.Body)
+		defer gr.Close()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		content, _ = io.ReadAll(gr)
+	} else {
+		content, _ = io.ReadAll(resp.Body)
+	}
+
+	return string(content)
 }

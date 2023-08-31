@@ -111,3 +111,14 @@ func RandomString(n int) string {
 	}
 	return string(randomStr)
 }
+
+// 随机数，n为 位数,去除大写字母和0
+func RandomString2(n int) string {
+	var defaultLetters = []rune("abcdefghijklmnopqrstuvwxyz123456789")
+	rand.Seed(time.Now().UnixNano())
+	randomStr := make([]rune, n)
+	for i := range randomStr {
+		randomStr[i] = defaultLetters[rand.Intn(len(defaultLetters))]
+	}
+	return string(randomStr)
+}
