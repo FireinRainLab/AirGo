@@ -74,11 +74,10 @@
 import {useISPStore} from "/@/stores/ispStore";
 import {storeToRefs} from "pinia";
 import {onMounted} from "vue";
-import {Encrypt, TelecomMobileHandler} from "/@/utils/encrypt"
-
-//复制剪切板
+import {TelecomMobileHandler, TelecomRSAEncrypt} from "/@/utils/encrypt"
 import commonFunction from '/@/utils/commonFunction';
 import {Local} from "/@/utils/storage";
+import {getFormatDate, randomString} from "/@/utils/formatTime";
 
 const {copyText} = commonFunction();
 
@@ -110,18 +109,23 @@ const ispLogin = (params: Isp, isp_type: string) => {
   switch (params.isp_type) {
     case "unicom":
     case "telecom":
+      // 判断是否有deviceUid
+        if (params.telecom_config.deviceUid===''){
+          // console.log("deviceUid为空")
+          params.telecom_config.deviceUid=randomString(16)
+        }
       //处理手机号
       params.telecom_config.phoneNum = TelecomMobileHandler(params.mobile)
       //处理loginAuthCipherAsymmertric
-      const tm = date("yyyyMMddHHmm00")
+      const tm = getFormatDate("yyyyMMddHHmm00")
       const au = `iPhone 14 15.4.${params.telecom_config.deviceUid.slice(0,12)}${params.mobile}${tm}${params.telecom_config.telecomPassword}0$$$0.`
-      params.telecom_config.loginAuthCipherAsymmertric = RSAEncrypt(au)
+      console.log("au:",au)
+      params.telecom_config.loginAuthCipherAsymmertric = TelecomRSAEncrypt(au)
       //时间戳
       params.telecom_config.timestamp = tm
 
   }
-
-  // console.log("登录:", params)
+  console.log("登录:", params)
    ispStore.ispLogin(params)
 }
 //复制url
@@ -148,31 +152,6 @@ const handleTimeChange = () => {
   }
 };
 
-//电信 RSA加密
-const RSAEncrypt = (str: string) => {
-  const key = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBkLT15ThVgz6/NOl6s8GNPofdWzWbCkWnkaAm7O2LjkM1H7dMvzkiqdxU02jamGRHLX/ZNMCXHnPcW/sDhiFCBN18qFvy8g6VYb9QtroI09e176s+ZCtiv7hbin2cCTj99iUpnEloZm19lwHyo69u5UMiPMpq0/XKBO8lYhN/gwIDAQAB";
-  return Encrypt(str, key)
-}
-
-function date(fmt: string, ts: string = '') {
-  const date = ts ? new Date(ts) : new Date()
-  let o: Record<string, any> = {
-    'M+': date.getMonth() + 1,
-    'd+': date.getDate(),
-    'H+': date.getHours(),
-    'm+': date.getMinutes(),
-    's+': date.getSeconds(),
-    'q+': Math.floor((date.getMonth() + 3) / 3),
-    'S': date.getMilliseconds()
-  };
-  if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length))
-  for (let k in o) {
-    let item = o[k];
-    if (new RegExp('(' + k + ')').test(fmt))
-      fmt = fmt.replace(RegExp.$1, RegExp.$1.length == 1 ? item : ('00' + item).substr(('' + item).length))
-  }
-  return fmt
-}
 
 onMounted(() => {
   ispStore.getMonitorByUserID()

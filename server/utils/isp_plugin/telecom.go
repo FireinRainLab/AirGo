@@ -12,11 +12,10 @@ import (
 )
 
 const (
-	TelecomCodeUrl        = "https://appgologin.189.cn:9031/login/client/getLoginRandomCode"
-	TelecomLoginUrl       = "https://appgologin.189.cn:9031/login/client/userLoginNormal"
-	TelecomQueryUrl       = "https://appfuwu.189.cn:9021/query/userFluxPackage"
-	t1ddddddddddddddddddd = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBkLT15ThVgz6/NOl6s8GNPofdWzWbCkWnkaAm7O2LjkM1H7dMvzkiqdxU02jamGRHLX/ZNMCXHnPcW/sDhiFCBN18qFvy8g6VYb9QtroI09e176s+ZCtiv7hbin2cCTj99iUpnEloZm19lwHyo69u5UMiPMpq0/XKBO8lYhN/gwIDAQAB"
-	TelecomPublicKey      = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBkLT15ThVgz6/NOl6s8GNPofdWzWbCkWnkaAm7O2LjkM1H7dMvzkiqdxU02jamGRHLX/ZNMCXHnPcW/sDhiFCBN18qFvy8g6VYb9QtroI09e176s+ZCtiv7hbin2cCTj99iUpnEloZm19lwHyo69u5UMiPMpq0/XKBO8lYhN/gwIDAQAB"
+	TelecomCodeUrl   = "https://appgologin.189.cn:9031/login/client/getLoginRandomCode"
+	TelecomLoginUrl  = "https://appgologin.189.cn:9031/login/client/userLoginNormal"
+	TelecomQueryUrl  = "https://appfuwu.189.cn:9021/query/userFluxPackage"
+	TelecomPublicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBkLT15ThVgz6/NOl6s8GNPofdWzWbCkWnkaAm7O2LjkM1H7dMvzkiqdxU02jamGRHLX/ZNMCXHnPcW/sDhiFCBN18qFvy8g6VYb9QtroI09e176s+ZCtiv7hbin2cCTj99iUpnEloZm19lwHyo69u5UMiPMpq0/XKBO8lYhN/gwIDAQAB"
 )
 
 // 发送登录验证码
@@ -76,6 +75,10 @@ func TelecomCode(isp *model.ISP) (string, error) {
 
 // 电信登录
 func TelecomLogin(isp *model.ISP) (string, error) {
+	//if isp.TelecomConfig.DeviceUid == "" {
+	//	isp.TelecomConfig.DeviceUid = encrypt_plugin.RandomString2(16)
+	//}
+
 	client := net_plugin.ClientWithDNS("114.114.114.114", 10*time.Second)
 	//timestamp := time.Now().Format("20060102150405")
 
@@ -111,7 +114,7 @@ func TelecomLogin(isp *model.ISP) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("电信登录json：", string(jsonValues))
+	//fmt.Println("电信登录json：", string(jsonValues))
 	formBytesReader := bytes.NewReader(jsonValues)
 
 	req, err := http.NewRequest("POST", TelecomLoginUrl, formBytesReader)

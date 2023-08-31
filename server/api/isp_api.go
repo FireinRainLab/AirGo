@@ -117,7 +117,7 @@ func ISPLogin(ctx *gin.Context) {
 		response.Fail("运营商参数错误", nil, ctx)
 		return
 	}
-	fmt.Println("登录：", isp)
+	//fmt.Println("登录：", isp)
 	if isp.ISPType == "loginAgain" {
 		//清空手机号信息，重新登录
 		//fmt.Println("清空手机号信息，重新登录")
@@ -130,7 +130,7 @@ func ISPLogin(ctx *gin.Context) {
 		isp1.TelecomConfig.PhoneNum = ""
 		isp1.TelecomConfig.TelecomToken = ""
 		go service.UpdateMonitor(isp1)
-		response.OK("获取成功", isp, ctx)
+		response.OK("获取成功", isp1, ctx)
 		return
 	}
 

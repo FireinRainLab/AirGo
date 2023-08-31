@@ -151,3 +151,34 @@ export function formatAxis(param: Date): string {
     else if (hour < 22) return '晚上好';
     else return '夜里好';
 }
+
+// 获取指定格式时间
+export function getFormatDate(fmt: string, ts: string = '') {
+    const date = ts ? new Date(ts) : new Date()
+    let o: Record<string, any> = {
+        'M+': date.getMonth() + 1,
+        'd+': date.getDate(),
+        'H+': date.getHours(),
+        'm+': date.getMinutes(),
+        's+': date.getSeconds(),
+        'q+': Math.floor((date.getMonth() + 3) / 3),
+        'S': date.getMilliseconds()
+    };
+    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length))
+    for (let k in o) {
+        let item = o[k];
+        if (new RegExp('(' + k + ')').test(fmt))
+            fmt = fmt.replace(RegExp.$1, RegExp.$1.length == 1 ? item : ('00' + item).substr(('' + item).length))
+    }
+    return fmt
+}
+
+// 随机字符串
+export function randomString(length:number) {
+    // const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const chars = '123456789abcdefghijklmnopqrstuvwxyz';
+    let result = '';
+    for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+    return result;
+}
+
